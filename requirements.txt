@@ -1,0 +1,25 @@
+# Dependencias de ejecucion (versiones probadas con Python 3.12)
+
+# Orquestador multi-agente (Pre-entrega 6)
+langgraph==1.2.14
+langchain-core==1.6.7
+langchain-openai==1.6.7
+langchain-anthropic==1.7.5
+pydantic==2.13.5
+python-dotenv==1.2.4
+orjson==3.11.5
+
+# API asincrona
+fastapi==0.143.0
+uvicorn==0.54.0
+
+# Redis: estado de los trabajos, cola y checkpoints de LangGraph (el checkpointer requiere Redis Stack, ver docker-compose.yml)
+redis==8.1.0
+langgraph-checkpoint-redis==0.5.2
+
+# Observabilidad: trazas a Arize Phoenix por OpenTelemetry (OpenInference)
+arize-phoenix-otel==0.17.2
+openinference-instrumentation-langchain==0.1.79
+
+# Cliente de la prueba de carga (scripts/load_test.py)
+httpx==0.28.1

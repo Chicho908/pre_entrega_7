@@ -1,0 +1,61 @@
+# Levanta todo el sistema: Redis Stack + Phoenix + API + worker
+#   docker compose up --build
+# La API queda en http://localhost:8000 (docs en /docs) y Phoenix en http://localhost:6006
+
+services:
+  # Redis Stack = Redis + modulos RediSearch y RedisJSON, que necesita el checkpointer de LangGraph
+  redis:
+    image: redis/redis-stack-server:7.4.0-v3
+    ports:
+      - "6379:6379"
+    # Persistencia: AOF (cada escritura se registra en disco) + volumen, para que los trabajos pausados y los checkpoints sobrevivan a un reinicio
+    environment:
+      REDIS_ARGS: "--appendonly yes --appendfsync everysec"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Dashboard de observabilidad: recibe las trazas por OTLP y calcula costo y latencia
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"   # interfaz web y endpoint HTTP de trazas
+      - "4317:4317"   # endpoint gRPC de trazas
+
+  # API: solo recibe, encola y consulta. No ejecuta el grafo (WORKERS_EMBEBIDOS=0)
+  api:
+    build: .
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
+      WORKERS_EMBEBIDOS: "0"
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      phoenix:
+        condition: service_started
+
+  # Worker: proceso aparte que saca trabajos de la cola y ejecuta el grafo. Se puede escalar: docker compose up --scale worker=3
+  worker:
+    build: .
+    command: ["python", "-m", "app.worker"]
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
+    depends_on:
+      redis:
+        condition: service_healthy
+      phoenix:
+        condition: service_started
+
+# Volumen con los datos de Redis (docker compose down lo conserva; docker compose down -v lo borra)
+volumes:
+  redis-data:

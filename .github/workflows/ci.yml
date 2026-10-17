@@ -1,0 +1,31 @@
+# Integración continua: en cada push y pull request corre los tests y el chequeo de tipos, sin API key ni Docker (LLM y Redis falsos)
+name: CI
+
+# Se dispara con cualquier push y con cualquier pull request
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    # Máquina limpia de GitHub: equivale a probar un git clone en limpio
+    runs-on: ubuntu-latest
+    steps:
+      # Descarga el código del repositorio
+      - uses: actions/checkout@v4
+
+      # Instala Python 3.12 (el mínimo que pide la consigna) y cachea las descargas de pip
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      # Instala las dependencias de ejecución y de desarrollo
+      - run: pip install -r requirements-dev.txt
+
+      # Corre los tests
+      - run: python -m pytest -q
+
+      # Chequea los tipos en modo estricto
+      - run: python -m mypy --strict app tests scripts

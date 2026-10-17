@@ -1,0 +1,6 @@
+# Dependencias de desarrollo: incluye las de ejecucion mas pytest (tests) y mypy (tipado estatico)
+-r requirements.txt
+pytest==9.1.1
+pytest-asyncio==1.4.0
+fakeredis==2.39.0
+mypy==2.4.0

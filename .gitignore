@@ -1,0 +1,15 @@
+# Credenciales: nunca se suben al repositorio
+.env
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Cachés de Python y de herramientas
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Resultados locales de la prueba de carga
+resultados*.json
